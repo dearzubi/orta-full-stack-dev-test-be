@@ -190,6 +190,25 @@ describe("Authentication API", () => {
       expect(res.status).to.equal(403);
       expect(res.body).to.have.property("message");
     });
+
+    it("should return error with invalid token", async () => {
+      const res1 = await request(app)
+        .get("/api/user/getuser")
+        .set("Authorization", ``);
+      expect(res1.status).to.equal(403);
+
+      const res2 = await request(app)
+        .get("/api/user/getuser")
+        .set("Authorization", `Bearer invalidtoken`);
+      expect(res2.status).to.equal(403);
+    });
+
+    it("should return error with incorrect auth scheme", async () => {
+      const res = await request(app)
+        .get("/api/user/getuser")
+        .set("Authorization", `SCHEME 123`);
+      expect(res.status).to.equal(403);
+    });
   });
 
   describe("POST /api/user/forgotPassword", () => {
