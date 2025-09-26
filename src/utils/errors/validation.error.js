@@ -28,12 +28,14 @@ export class ValidationError extends AppError {
       cause,
     });
     this.name = "ValidationError";
-    this.issues = issues.map((issue) => {
-      return {
-        path: issue.path.join("."),
-        error: issue.message,
-      };
-    });
+    if (Array.isArray(issues)) {
+      this.issues = issues.map((issue) => {
+        return {
+          path: issue.path.join("."),
+          error: issue.message,
+        };
+      });
+    }
   }
 
   /**
