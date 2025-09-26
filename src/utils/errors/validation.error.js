@@ -20,7 +20,13 @@ export class ValidationError extends AppError {
     errorCode = "VALIDATION_ERROR",
     cause,
   }) {
-    super(message, 400, errorCode, true, cause);
+    super({
+      message,
+      statusCode: 400,
+      errorCode,
+      isOperational: true,
+      cause,
+    });
     this.name = "ValidationError";
     this.issues = issues.map((issue) => {
       return {
