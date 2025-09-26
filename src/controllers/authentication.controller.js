@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import express from "express";
 import { zodSchemaValidator } from "../utils/errors/utils.js";
 import {
   registerUser,
@@ -9,6 +9,8 @@ import {
 } from "../services/authentication/index.js";
 import { z } from "zod";
 import validator from "validator";
+
+const { NextFunction, Request, Response } = express;
 
 const schemaRegisterUser = z.object({
   name: z.string().nonempty({ error: "name is required" }).trim(),
