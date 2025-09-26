@@ -41,7 +41,11 @@ const requireAuthMiddleware = async (req, res, next) => {
     req.token = token;
     next();
   } catch (error) {
-    next(error);
+    if (error.message === "jwt malformed") {
+      next(new AuthorizationError("Malformed token", "AUTH_TOKEN_MALFORMED"));
+    } else {
+      next(error);
+    }
   }
 };
 export default requireAuthMiddleware;
