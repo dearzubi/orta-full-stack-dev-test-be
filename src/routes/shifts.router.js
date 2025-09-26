@@ -1,7 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import Shift from "../models/shiftsModel.js";
-import requireAuth from "../middleware/requireAuth.js";
+import requireAuth from "../middlewares/requireAuth.js";
 
 const router = express.Router();
 

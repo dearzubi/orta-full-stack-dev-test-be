@@ -31,7 +31,7 @@ mongoose.connect(
     } else {
       console.log("DB Connected");
     }
-  }
+  },
 );
 
 //api endpoints
