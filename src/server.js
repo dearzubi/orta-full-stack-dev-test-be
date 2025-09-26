@@ -37,3 +37,5 @@ app.use(errorHandlerMiddleware);
 
 //listen
 app.listen(port, () => console.log(`Listening on localhost:${port}`));
+
+export { app };
