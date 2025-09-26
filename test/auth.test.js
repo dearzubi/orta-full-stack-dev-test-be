@@ -68,6 +68,49 @@ describe("Authentication API", () => {
       expect(res.body).to.have.property("message");
       expect(res.body.message).to.equal("User already exists");
     });
+
+    it("should return error for missing fields", async () => {
+      const res = await request(app)
+        .post("/api/user/register")
+        .send({
+          name: "",
+          email: "",
+          password: "",
+        })
+        .expect(400);
+
+      expect(res.body).to.have.property("issues");
+      expect(res.body.issues).to.deep.include({
+        path: "name",
+        error: "Name is required",
+      });
+      expect(res.body.issues).to.deep.include({
+        path: "email",
+        error: "Invalid email address",
+      });
+      expect(res.body.issues).to.deep.include({
+        path: "password",
+        error: "Password is required",
+      });
+    });
+
+    it("should return error for weak password", async () => {
+      const res = await request(app)
+        .post("/api/user/register")
+        .send({
+          name: "Test User",
+          email: "test@example.com",
+          password: "weak",
+        })
+        .expect(400);
+
+      expect(res.body).to.have.property("issues");
+      expect(res.body.issues).to.deep.include({
+        path: "password",
+        error:
+          "Password must be min 8 characters long and include uppercase, lowercase, number, and symbol",
+      });
+    });
   });
 
   describe("POST /api/user/login", () => {
@@ -96,7 +139,7 @@ describe("Authentication API", () => {
       const res = await request(app)
         .post("/api/user/login")
         .send({
-          email: "non-existent@example.com",
+          email: "nonexistent@example.com",
           password: "SomePass123!",
         })
         .expect(404);
@@ -231,7 +274,22 @@ describe("Authentication API", () => {
         newPassword: "NewTestPass123!",
       });
 
-      expect(res.status).to.be.oneOf([400, 500]);
+      expect(res.status).to.be.equal(400);
+      expect(res.body).to.have.property("message");
+    });
+
+    it("should return error with expired token", async () => {
+      const user = await UserModel.findById(userId);
+      user.passwordResetTokenExpiry = new Date(Date.now() - 60 * 60 * 1000);
+      await user.save();
+
+      const res = await request(app).post("/api/user/resetPassword").send({
+        id: userId,
+        resetToken: resetToken,
+        newPassword: "NewTestPass123!",
+      });
+
+      expect(res.status).to.equal(400);
       expect(res.body).to.have.property("message");
     });
   });

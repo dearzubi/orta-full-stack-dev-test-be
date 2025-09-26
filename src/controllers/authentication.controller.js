@@ -13,11 +13,11 @@ import validator from "validator";
 const { NextFunction, Request, Response } = express;
 
 const schemaRegisterUser = z.object({
-  name: z.string().nonempty({ error: "name is required" }).trim(),
-  email: z.email().nonempty({ error: "invalid email address" }).trim(),
+  name: z.string().nonempty({ error: "Name is required" }).trim(),
+  email: z.email().nonempty({ error: "Invalid email address" }).trim(),
   password: z
     .string()
-    .nonempty({ error: "password is required" })
+    .nonempty({ error: "Password is required" })
     .refine(validator.isStrongPassword, {
       error:
         "Password must be min 8 characters long and include uppercase, lowercase, number, and symbol",
