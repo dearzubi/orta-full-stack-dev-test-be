@@ -22,7 +22,6 @@ const transporter = createTransport({
  */
 export const sendEmail = async (to, subject, html) => {
   if (process.env.NODE_ENV === "test") {
-    console.log(`Mock email sent to: ${to}, subject: ${subject}`);
     return;
   }
 

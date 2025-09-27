@@ -12,7 +12,7 @@ export default defineConfig([
     rules: {
       ...eslintConfigPrettier.rules,
       "no-unused-vars": "off",
-      "no-undef": "warn",
+      "no-undef": "off",
       "no-unreachable": "error",
       eqeqeq: "warn",
       "no-console": "warn",

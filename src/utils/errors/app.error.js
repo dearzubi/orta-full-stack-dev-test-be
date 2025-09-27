@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 /** @typedef {{
  * name: string,
  * message: string,
@@ -42,7 +44,7 @@ export class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = isOperational;
     this.errorCode = errorCode;
-    this.timestamp = new Date().toISOString();
+    this.timestamp = dayjs().toISOString();
 
     Error.captureStackTrace?.(this, this.constructor);
   }

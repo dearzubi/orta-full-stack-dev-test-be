@@ -1,7 +1,8 @@
 // migrations/seed.js
 import mongoose from "mongoose";
+import * as process from "node:process";
 import dotenv from "dotenv";
-import Shift from "../models/shiftsModel.js";
+import Shift from "../models/shifts.model.js";
 
 dotenv.config();
 

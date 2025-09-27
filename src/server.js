@@ -6,6 +6,7 @@ import * as process from "node:process";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger/swaggerConfig.js";
 import authRouter from "./routes/authentication.router.js";
+import shiftsRouter from "./routes/shifts.router.js";
 import { errorHandlerMiddleware } from "./middlewares/error-handler.middleware.js";
 dotenv.config();
 //app config
@@ -29,7 +30,7 @@ if (process.env.NODE_ENV !== "test") {
 
 //api endpoints
 app.use("/api/user", authRouter);
-// app.use("/api/shifts", shiftsRouter);
+app.use("/api/shifts", shiftsRouter);
 // Swagger Docs
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

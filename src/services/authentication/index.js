@@ -6,6 +6,7 @@ import * as process from "node:process";
 import crypto from "node:crypto";
 import { sendEmail } from "../../utils/email.js";
 import { ValidationError } from "../../utils/errors/validation.error.js";
+import { getCurrentDateTime, addTime, isAfter } from "../../utils/datetime.js";
 
 /**
  * Create JWT token for user using userId as payload
@@ -139,7 +140,11 @@ const forgotPassword = async (email) => {
     .update(resetToken)
     .digest("hex");
   const ttlMinutes = 60; // Token valid for 60 minutes
-  const resetTokenExpiresAt = new Date(Date.now() + ttlMinutes * 60_000);
+  const resetTokenExpiresAt = addTime(
+    getCurrentDateTime(),
+    ttlMinutes,
+    "minute",
+  );
 
   user.passwordResetTokenHash = resetTokenHash;
   user.passwordResetTokenExpiry = resetTokenExpiresAt;
@@ -173,7 +178,7 @@ const resetPassword = async (id, resetToken, newPassword) => {
     });
   }
 
-  if (new Date() > new Date(user.passwordResetTokenExpiry)) {
+  if (isAfter(getCurrentDateTime(), user.passwordResetTokenExpiry)) {
     throw new ValidationError({
       message: "Password reset token has expired",
       statusCode: 400,
