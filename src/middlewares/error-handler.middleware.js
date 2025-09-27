@@ -1,7 +1,9 @@
-import express from "express";
 import { AppError } from "../utils/errors/app.error.js";
 import * as process from "node:process";
-const { NextFunction, Request, Response } = express;
+
+/** @typedef {import('express').Request} Request */
+/** @typedef {import('express').Response} Response */
+/** @typedef {import('express').NextFunction} NextFunction */
 
 /**
  * Global error handling middleware
@@ -20,8 +22,8 @@ export const errorHandlerMiddleware = async (error, req, res, _next) => {
   } else {
     appError = new AppError({
       message: error.message || "Internal server error",
-      statusCode: error.statusCode || 500,
-      errorCode: error.errorCode || "INTERNAL_SERVER_ERROR",
+      statusCode: 500,
+      errorCode: "INTERNAL_SERVER_ERROR",
       isOperational: false,
       cause: error,
     });

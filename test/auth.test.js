@@ -1,9 +1,12 @@
 import { expect } from "chai";
 import request from "supertest";
 import mongoose from "mongoose";
+import dotenv from "dotenv";
+import * as process from "node:process";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { app } from "../src/server.js";
 import UserModel from "../src/models/user.model.js";
+dotenv.config();
 
 describe("Authentication API", () => {
   /** @type {MongoMemoryServer} */
@@ -49,6 +52,7 @@ describe("Authentication API", () => {
       expect(res.body).to.have.property("token");
       expect(res.body).to.have.property("user");
       expect(res.body.user.email).to.equal(userData.email);
+      expect(res.body.user.role).to.equal("worker");
     });
 
     it("should return error for duplicate email", async () => {
@@ -133,6 +137,7 @@ describe("Authentication API", () => {
 
       expect(res.body).to.have.property("token");
       expect(res.body).to.have.property("user");
+      expect(res.body.user.role).to.equal("worker");
     });
 
     it("should return error for non-existent user", async () => {
@@ -183,6 +188,7 @@ describe("Authentication API", () => {
 
       expect(res.body).to.have.property("user");
       expect(res.body.user.email).to.equal("test@example.com");
+      expect(res.body.user.role).to.equal("worker");
     });
 
     it("should return error without token", async () => {
@@ -310,6 +316,122 @@ describe("Authentication API", () => {
 
       expect(res.status).to.equal(400);
       expect(res.body).to.have.property("message");
+    });
+  });
+
+  describe("POST /api/user/promote-to-admin", () => {
+    /** @type {string} */
+    let adminToken;
+    /** @type {string} */
+    let workerToken;
+    /** @type {string} */
+    let workerId;
+
+    beforeEach(async () => {
+      const adminRes = await request(app).post("/api/user/register").send({
+        name: "Admin User",
+        email: "admin@example.com",
+        password: "AdminPass123!",
+      });
+      adminToken = adminRes.body.token;
+
+      // Manually set admin role in database
+      const adminUser = await UserModel.findOne({ email: "admin@example.com" });
+      adminUser.role = "admin";
+      await adminUser.save();
+
+      const workerRes = await request(app).post("/api/user/register").send({
+        name: "Worker User",
+        email: "worker@example.com",
+        password: "WorkerPass123!",
+      });
+      workerToken = workerRes.body.token;
+      workerId = workerRes.body.user.id;
+    });
+
+    it("should promote user to admin when requested by admin", async () => {
+      const res = await request(app)
+        .post("/api/user/promote-to-admin")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          userId: workerId,
+        })
+        .expect(200);
+
+      expect(res.body).to.have.property("message");
+      expect(res.body.message).to.equal("User promoted to admin successfully");
+      expect(res.body).to.have.property("user");
+      expect(res.body.user.role).to.equal("admin");
+
+      const updatedUser = await UserModel.findById(workerId);
+      expect(updatedUser.role).to.equal("admin");
+    });
+
+    it("should return error when worker tries to promote user", async () => {
+      const res = await request(app)
+        .post("/api/user/promote-to-admin")
+        .set("Authorization", `Bearer ${workerToken}`)
+        .send({
+          userId: workerId,
+        })
+        .expect(403);
+
+      expect(res.body).to.have.property("message");
+      expect(res.body.message).to.equal("Access denied. Admin role required");
+    });
+
+    it("should return error for non-existent user", async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toString();
+
+      const res = await request(app)
+        .post("/api/user/promote-to-admin")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({
+          userId: nonExistentId,
+        })
+        .expect(404);
+
+      expect(res.body).to.have.property("message");
+      expect(res.body.message).to.equal("User does not exist");
+    });
+
+    it("should return error without authentication", async () => {
+      const res = await request(app)
+        .post("/api/user/promote-to-admin")
+        .send({
+          userId: workerId,
+        })
+        .expect(403);
+
+      expect(res.body).to.have.property("message");
+    });
+
+    it("should return error with invalid token", async () => {
+      const res = await request(app)
+        .post("/api/user/promote-to-admin")
+        .set("Authorization", `Bearer invalidtoken`)
+        .send({
+          userId: workerId,
+        })
+        .expect(403);
+
+      expect(res.body).to.have.property("message");
+    });
+
+    it("should return error for missing userId", async () => {
+      const res = await request(app)
+        .post("/api/user/promote-to-admin")
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({})
+        .expect(400);
+
+      expect(res.body).to.have.property("issues");
+      expect(res.body.issues).to.be.an("array");
+      expect(res.body.issues[0]).to.have.property("path", "userId");
+      expect(res.body.issues[0]).to.have.property(
+        "error",
+        "Invalid input: expected string, received undefined",
+      );
     });
   });
 });

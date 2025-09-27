@@ -1,9 +1,10 @@
-import express from "express";
 import jwt from "jsonwebtoken";
 import { AuthorizationError } from "../utils/errors/auth.error.js";
 import * as process from "node:process";
 
-const { NextFunction, Request, Response } = express;
+/** @typedef {import('express').Request} Request */
+/** @typedef {import('express').Response} Response */
+/** @typedef {import('express').NextFunction} NextFunction */
 
 /**
  * Middleware to require authentication using JWT

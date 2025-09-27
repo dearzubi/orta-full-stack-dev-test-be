@@ -48,6 +48,7 @@ const registerUser = async (name, email, password) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role,
     },
   };
 };
@@ -85,6 +86,7 @@ const loginUser = async (email, password) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role,
     },
   };
 };
@@ -110,6 +112,7 @@ const getUser = async (id) => {
       id: user._id,
       name: user.name,
       email: user.email,
+      role: user.role,
     },
   };
 };
@@ -204,4 +207,41 @@ const resetPassword = async (id, resetToken, newPassword) => {
   await user.save();
 };
 
-export { registerUser, loginUser, getUser, forgotPassword, resetPassword };
+/**
+ * Promote a user to admin role
+ * @param {string} userId - ID of the user to promote
+ * @returns {Promise<{user: {id: string, name: string, email: string, role: string}}>} Updated user info
+ * @throws {AppError} If user does not exist
+ */
+const promoteToAdmin = async (userId) => {
+  const user = await UserModel.findById(userId);
+
+  if (!user) {
+    throw new AppError({
+      message: "User does not exist",
+      statusCode: 404,
+      errorCode: "USER_NOT_FOUND",
+    });
+  }
+
+  user.role = "admin";
+  await user.save();
+
+  return {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  };
+};
+
+export {
+  registerUser,
+  loginUser,
+  getUser,
+  forgotPassword,
+  resetPassword,
+  promoteToAdmin,
+};

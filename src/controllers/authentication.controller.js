@@ -1,4 +1,3 @@
-import express from "express";
 import { zodSchemaValidator } from "../utils/errors/utils.js";
 import {
   registerUser,
@@ -6,11 +5,14 @@ import {
   getUser,
   forgotPassword,
   resetPassword,
+  promoteToAdmin,
 } from "../services/authentication/index.js";
 import { z } from "zod";
 import validator from "validator";
 
-const { NextFunction, Request, Response } = express;
+/** @typedef {import('express').Request} Request */
+/** @typedef {import('express').Response} Response */
+/** @typedef {import('express').NextFunction} NextFunction */
 
 const schemaRegisterUser = z.object({
   name: z.string().nonempty({ error: "Name is required" }).trim(),
@@ -52,6 +54,10 @@ const schemaResetPassword = z.object({
     .string()
     .nonempty({ error: "password reset token is required" })
     .trim(),
+});
+
+const schemaPromoteToAdmin = z.object({
+  userId: z.string().nonempty({ error: "user id is required" }).trim(),
 });
 
 /**
@@ -153,10 +159,31 @@ const resetPasswordController = async (req, res, next) => {
   }
 };
 
+/**
+ * Controller to handle promoting user to admin
+ * @param {Request} req
+ * @param {Response} res
+ * @param {NextFunction} next
+ */
+const promoteToAdminController = async (req, res, next) => {
+  try {
+    /** @type {{userId: string}} */
+    const validatedData = zodSchemaValidator(schemaPromoteToAdmin, req.body);
+    const result = await promoteToAdmin(validatedData.userId);
+    res.status(200).json({
+      message: "User promoted to admin successfully",
+      user: result.user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   registerUserController,
   loginUserController,
   getUserController,
   forgotPasswordController,
   resetPasswordController,
+  promoteToAdminController,
 };
