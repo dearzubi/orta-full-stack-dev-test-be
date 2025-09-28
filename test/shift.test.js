@@ -32,8 +32,8 @@ describe("Shift API", () => {
   /** @type {string} */
   let workerUserId;
 
-  /** @type {string} */
-  let locationId;
+  /** @type {Object} */
+  let testLocation;
 
   before(async () => {
     if (process.env.NODE_ENV !== "test") {
@@ -80,20 +80,22 @@ describe("Shift API", () => {
     workerToken = workerRes.body.token;
     workerUserId = workerRes.body.user.id;
 
-    const location = new LocationModel({
+    testLocation = {
       name: "Test Location",
       postCode: "M1 1AA",
       distance: 5,
       constituency: "Test Constituency",
       adminDistrict: "Test District",
+      address: "123 Test Street, Manchester",
       cordinates: {
         longitude: -2.244644,
         latitude: 53.483959,
         useRotaCloud: true,
       },
-    });
-    const savedLocation = await location.save();
-    locationId = savedLocation._id.toString();
+    };
+
+    const location = new LocationModel(testLocation);
+    await location.save();
   });
 
   describe("POST /api/shifts", () => {
@@ -111,7 +113,7 @@ describe("Shift API", () => {
       const shiftData = {
         ...validShiftData,
         user: workerUserId,
-        location: locationId,
+        location: testLocation,
       };
 
       const res = await request(app)
@@ -159,7 +161,7 @@ describe("Shift API", () => {
       const shiftData = {
         ...validShiftData,
         user: "invalid-id",
-        location: locationId,
+        location: testLocation,
       };
 
       const res = await request(app)
@@ -180,7 +182,7 @@ describe("Shift API", () => {
       const shiftData = {
         ...validShiftData,
         user: nonExistentUserId,
-        location: locationId,
+        location: testLocation,
       };
 
       const res = await request(app)
@@ -193,29 +195,42 @@ describe("Shift API", () => {
       expect(res.body.message).to.equal("User not found");
     });
 
-    it("should return error for non-existent location", async () => {
-      const nonExistentLocationId = new mongoose.Types.ObjectId().toString();
+    it("should create a new location when location doesn't exist", async () => {
+      const newLocation = {
+        name: "New Location",
+        address: "456 New Street, London",
+        postCode: "SW1A 1AA",
+        cordinates: {
+          longitude: -0.1276,
+          latitude: 51.5074,
+        },
+      };
+
       const shiftData = {
         ...validShiftData,
         user: workerUserId,
-        location: nonExistentLocationId,
+        location: newLocation,
       };
 
       const res = await request(app)
         .post("/api/shifts")
         .set("Authorization", `Bearer ${adminToken}`)
         .send(shiftData)
-        .expect(404);
+        .expect(201);
 
-      expect(res.body).to.have.property("message");
-      expect(res.body.message).to.equal("Location not found");
+      expect(res.body).to.have.property("shift");
+      expect(res.body.shift.location.name).to.equal("New Location");
+      expect(res.body.shift.location.address).to.equal(
+        "456 New Street, London",
+      );
+      expect(res.body.shift.location.postCode).to.equal("SW1A 1AA");
     });
 
     it("should return error for invalid time format", async () => {
       const shiftData = {
         ...validShiftData,
         user: workerUserId,
-        location: locationId,
+        location: testLocation,
         startTime: "25:00",
         finishTime: "09:70",
       };
@@ -241,7 +256,7 @@ describe("Shift API", () => {
       const shiftData = {
         ...validShiftData,
         user: workerUserId,
-        location: locationId,
+        location: testLocation,
         typeOfShift: [SHIFT_TYPES.NIGHT],
         startTime: "18:00",
         finishTime: "09:00", // Next day
@@ -262,7 +277,7 @@ describe("Shift API", () => {
       const shiftData = {
         ...validShiftData,
         user: workerUserId,
-        location: locationId,
+        location: testLocation,
         date: "2020-01-01",
       };
 
@@ -283,7 +298,8 @@ describe("Shift API", () => {
       const shiftData = {
         ...validShiftData,
         user: workerUserId,
-        location: locationId,
+        location: testLocation,
+        date: "2024-01-01", // Past date
       };
 
       await request(app).post("/api/shifts").send(shiftData).expect(401);
@@ -293,7 +309,7 @@ describe("Shift API", () => {
       const shiftData = {
         ...validShiftData,
         user: workerUserId,
-        location: locationId,
+        location: testLocation,
       };
 
       await request(app)
@@ -310,7 +326,7 @@ describe("Shift API", () => {
         .send({
           ...validShiftData,
           user: workerUserId,
-          location: locationId,
+          location: testLocation,
         })
         .expect(403);
 
@@ -329,7 +345,7 @@ describe("Shift API", () => {
         role: "Original Role",
         typeOfShift: [SHIFT_TYPES.MORNING],
         user: workerUserId,
-        location: locationId,
+        location: testLocation,
         startTime: "09:00",
         finishTime: "17:00",
         numOfShiftsPerDay: 1,
@@ -519,21 +535,33 @@ describe("Shift API", () => {
       });
     });
 
-    it("should return error for non-existent location", async () => {
-      const nonExistentLocationId = new mongoose.Types.ObjectId().toString();
+    it("should update shift with new location", async () => {
+      const newLocation = {
+        name: "Updated Location",
+        address: "789 Updated Street, Birmingham",
+        postCode: "B1 1XY",
+        cordinates: {
+          longitude: -1.8904,
+          latitude: 52.4862,
+        },
+      };
+
       const updateData = {
-        location: nonExistentLocationId,
-        user: workerUserId,
+        location: newLocation,
+        title: "Updated Title",
       };
 
       const res = await request(app)
         .put(`/api/shifts/${shiftId}`)
         .set("Authorization", `Bearer ${adminToken}`)
         .send(updateData)
-        .expect(404);
+        .expect(200);
 
-      expect(res.body).to.have.property("message");
-      expect(res.body.message).to.equal("Location not found");
+      expect(res.body.shift.location.name).to.equal("Updated Location");
+      expect(res.body.shift.location.address).to.equal(
+        "789 Updated Street, Birmingham",
+      );
+      expect(res.body.shift.location.postCode).to.equal("B1 1XY");
     });
 
     it("should return error without authentication token", async () => {
@@ -553,39 +581,6 @@ describe("Shift API", () => {
         .set("Authorization", "Bearer invalid-token")
         .send(updateData)
         .expect(401);
-    });
-
-    it("should update shift with new location", async () => {
-      const newLocation = new LocationModel({
-        name: "New Test Location",
-        postCode: "M2 2BB",
-        distance: 10,
-        constituency: "New Constituency",
-        adminDistrict: "New District",
-        cordinates: {
-          longitude: -2.345678,
-          latitude: 53.56789,
-          useRotaCloud: true,
-        },
-      });
-      const savedNewLocation = await newLocation.save();
-
-      const updateData = {
-        location: savedNewLocation._id.toString(),
-        user: workerUserId,
-      };
-
-      const res = await request(app)
-        .put(`/api/shifts/${shiftId}`)
-        .set("Authorization", `Bearer ${adminToken}`)
-        .send(updateData)
-        .expect(200);
-
-      expect(res.body).to.have.property("shift");
-      expect(res.body.shift.location.id).to.equal(
-        savedNewLocation._id.toString(),
-      );
-      expect(res.body.shift.location.name).to.equal("New Test Location");
     });
 
     it("should return error when worker tries to update shift", async () => {
@@ -612,7 +607,7 @@ describe("Shift API", () => {
         role: "Test Role",
         typeOfShift: [SHIFT_TYPES.MORNING],
         user: workerUserId,
-        location: locationId,
+        location: testLocation,
         startTime: "09:00",
         finishTime: "17:00",
         numOfShiftsPerDay: 1,
@@ -697,7 +692,7 @@ describe("Shift API", () => {
             role: "Nurse",
             typeOfShift: [SHIFT_TYPES.MORNING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "09:00",
             finishTime: "17:00",
             numOfShiftsPerDay: 1,
@@ -708,7 +703,7 @@ describe("Shift API", () => {
             role: "Therapist",
             typeOfShift: [SHIFT_TYPES.EVENING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "11:00",
             finishTime: "19:00",
             numOfShiftsPerDay: 1,
@@ -742,7 +737,7 @@ describe("Shift API", () => {
           role: "Nurse",
           typeOfShift: [SHIFT_TYPES.MORNING],
           user: workerUserId,
-          location: locationId,
+          location: testLocation,
           startTime: "09:00",
           finishTime: "17:00",
           numOfShiftsPerDay: 1,
@@ -759,7 +754,7 @@ describe("Shift API", () => {
             role: "Doctor",
             typeOfShift: [SHIFT_TYPES.EVENING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "10:00",
             finishTime: "18:00",
             numOfShiftsPerDay: 1,
@@ -790,7 +785,7 @@ describe("Shift API", () => {
           role: "Nurse",
           typeOfShift: [SHIFT_TYPES.MORNING],
           user: workerUserId,
-          location: locationId,
+          location: testLocation,
           startTime: "09:00",
           finishTime: "17:00",
           date: "2025-12-25",
@@ -806,7 +801,7 @@ describe("Shift API", () => {
             role: "Doctor",
             typeOfShift: [SHIFT_TYPES.MORNING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "10:00",
             finishTime: "18:00",
             numOfShiftsPerDay: 1,
@@ -817,7 +812,7 @@ describe("Shift API", () => {
             role: "Technician",
             typeOfShift: [SHIFT_TYPES.EVENING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "11:00",
             finishTime: "19:00",
             numOfShiftsPerDay: 1,
@@ -847,7 +842,7 @@ describe("Shift API", () => {
             role: "Nurse",
             typeOfShift: [SHIFT_TYPES.MORNING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "09:00",
             finishTime: "17:00",
             numOfShiftsPerDay: 1,
@@ -858,7 +853,7 @@ describe("Shift API", () => {
             role: "Doctor",
             typeOfShift: [SHIFT_TYPES.MORNING],
             user: new mongoose.Types.ObjectId().toString(),
-            location: locationId,
+            location: testLocation,
             startTime: "10:00",
             finishTime: "18:00",
             numOfShiftsPerDay: 1,
@@ -899,7 +894,7 @@ describe("Shift API", () => {
             role: "Nurse",
             typeOfShift: [SHIFT_TYPES.MORNING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "08:00",
             finishTime: "16:00",
             numOfShiftsPerDay: 1,
@@ -922,7 +917,7 @@ describe("Shift API", () => {
           numOfShiftsPerDay: 1,
           date: "2025-12-25",
           user: workerUserId,
-          location: locationId,
+          location: testLocation,
         },
       ];
 
@@ -949,7 +944,7 @@ describe("Shift API", () => {
         user: workerUserId,
         startTime: "09:00",
         finishTime: "17:00",
-        location: locationId,
+        location: testLocation,
         date: "2025-12-25",
       };
 
@@ -1036,7 +1031,7 @@ describe("Shift API", () => {
         user: workerUserId,
         startTime: "09:00",
         finishTime: "17:00",
-        location: locationId,
+        location: testLocation,
         date: tomorrow.toISOString(),
       };
 
@@ -1060,7 +1055,7 @@ describe("Shift API", () => {
         user: workerUserId,
         startTime: startTime,
         finishTime: endTime,
-        location: locationId,
+        location: testLocation,
         date: now.toISOString(),
       };
 
@@ -1136,7 +1131,7 @@ describe("Shift API", () => {
         user: workerUserId,
         startTime: startTime,
         finishTime: endTime,
-        location: locationId,
+        location: testLocation,
         date: now.toISOString(),
       };
 
@@ -1166,7 +1161,7 @@ describe("Shift API", () => {
         user: workerUserId,
         startTime: "09:00",
         finishTime: "17:00",
-        location: locationId,
+        location: testLocation,
         date: tomorrow.toISOString(),
       };
 
@@ -1217,7 +1212,7 @@ describe("Shift API", () => {
         user: workerUserId,
         startTime: "22:00",
         finishTime: "06:00", // Next day
-        location: locationId,
+        location: testLocation,
         date: tomorrow.toISOString(),
       };
 
@@ -1283,7 +1278,7 @@ describe("Shift API", () => {
         user: workerUserId,
         startTime: startTime,
         finishTime: endTime,
-        location: locationId,
+        location: testLocation,
         date: now.toISOString(),
       };
 
@@ -1363,7 +1358,7 @@ describe("Shift API", () => {
         user: workerUserId,
         startTime: startTime,
         finishTime: endTime,
-        location: locationId,
+        location: testLocation,
         date: now.toISOString(),
       };
 
@@ -1399,7 +1394,7 @@ describe("Shift API", () => {
             role: "Nurse",
             typeOfShift: [SHIFT_TYPES.MORNING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "09:00",
             finishTime: "17:00",
             date: "2026-01-01",
@@ -1409,7 +1404,7 @@ describe("Shift API", () => {
             role: "Doctor",
             typeOfShift: [SHIFT_TYPES.EVENING],
             user: adminUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "18:00",
             finishTime: "06:00",
             date: "2026-01-02",
@@ -1419,7 +1414,7 @@ describe("Shift API", () => {
             role: "Therapist",
             typeOfShift: [SHIFT_TYPES.NIGHT],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "22:00",
             finishTime: "06:00",
             date: "2026-01-03",
@@ -1640,7 +1635,7 @@ describe("Shift API", () => {
             role: "Nurse",
             typeOfShift: [SHIFT_TYPES.MORNING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "09:00",
             finishTime: "17:00",
             date: "2026-01-01",
@@ -1650,7 +1645,7 @@ describe("Shift API", () => {
             role: "Doctor",
             typeOfShift: [SHIFT_TYPES.EVENING],
             user: workerUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "18:00",
             finishTime: "06:00",
             date: "2026-01-02",
@@ -1660,7 +1655,7 @@ describe("Shift API", () => {
             role: "Therapist",
             typeOfShift: [SHIFT_TYPES.NIGHT],
             user: adminUserId,
-            location: locationId,
+            location: testLocation,
             startTime: "22:00",
             finishTime: "06:00",
             date: "2026-01-03",

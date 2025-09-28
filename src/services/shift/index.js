@@ -1,6 +1,5 @@
 import ShiftModel from "../../models/shifts.model.js";
 import UserModel from "../../models/user.model.js";
-import LocationModel from "../../models/location.model.js";
 import { AppError } from "../../utils/errors/app.error.js";
 import { ValidationError } from "../../utils/errors/validation.error.js";
 import { SHIFT_STATUS, SHIFT_CONSTRAINTS } from "./constants.js";
@@ -11,6 +10,7 @@ import {
   getCurrentDateTime,
   formatTimeString,
 } from "../../utils/datetime.js";
+import { findOrCreateLocation } from "../location/index.js";
 
 /**
  * Format a single shift object for API response
@@ -46,6 +46,7 @@ const formatShiftForResponse = (shift) => ({
     constituency: shift.location.constituency,
     adminDistrict: shift.location.adminDistrict,
     coordinates: shift.location.cordinates,
+    address: shift.location.address,
   },
 });
 
@@ -84,7 +85,7 @@ const getShiftsWithPagination = async (baseQuery = {}, options = {}) => {
       .populate("user", "name email")
       .populate(
         "location",
-        "name postCode distance constituency adminDistrict cordinates",
+        "name postCode distance constituency adminDistrict cordinates address",
       )
       .sort(sortOptions)
       .skip(skip)
@@ -122,10 +123,14 @@ const getShiftsWithPagination = async (baseQuery = {}, options = {}) => {
  * @param {string} shiftData.startTime - Start time of the shift
  * @param {string} shiftData.finishTime - Finish time of the shift
  * @param {number} [shiftData.numOfShiftsPerDay] - Number of shifts per day (default: 1)
- * @param {string} shiftData.location - Location ID
+ * @param {Object} shiftData.location - Location object
+ * @param {string} shiftData.location.name - Location name
+ * @param {string} shiftData.location.address - Location address
+ * @param {string} shiftData.location.postcode - Location postcode
+ * @param {Object} shiftData.location.cordinates - Location coordinates
  * @param {Date} shiftData.date - Date of the shift
  * @returns {Promise<Object>} Created shift with populated user and location data
- * @throws {AppError} If user or location does not exist
+ * @throws {AppError} If user does not exist
  * @throws {ValidationError} If validation fails
  */
 const createShift = async (shiftData) => {
@@ -150,14 +155,7 @@ const createShift = async (shiftData) => {
     });
   }
 
-  const locationExists = await LocationModel.findById(location);
-  if (!locationExists) {
-    throw new AppError({
-      message: "Location not found",
-      statusCode: 404,
-      errorCode: "LOCATION_NOT_FOUND",
-    });
-  }
+  const locationDoc = await findOrCreateLocation(location);
 
   const { startDateTime, finishDateTime } = createShiftDateTimes(
     date,
@@ -173,7 +171,7 @@ const createShift = async (shiftData) => {
     startTime: startDateTime,
     finishTime: finishDateTime,
     numOfShiftsPerDay,
-    location,
+    location: locationDoc._id,
     date,
   });
 
@@ -183,7 +181,7 @@ const createShift = async (shiftData) => {
     .populate("user", "name email")
     .populate(
       "location",
-      "name postCode distance constituency adminDistrict cordinates",
+      "name postCode distance constituency adminDistrict cordinates address",
     )
     .exec();
 
@@ -211,7 +209,11 @@ const createShift = async (shiftData) => {
  * @param {string} [updateData.startTime] - Start time of the shift
  * @param {string} [updateData.finishTime] - Finish time of the shift
  * @param {number} [updateData.numOfShiftsPerDay] - Number of shifts per day
- * @param {string} [updateData.location] - Location ID
+ * @param {Object} [updateData.location] - Location object
+ * @param {string} [updateData.location.name] - Location name
+ * @param {string} [updateData.location.address] - Location address
+ * @param {string} [updateData.location.postcode] - Location postcode
+ * @param {Object} [updateData.location.cordinates] - Location coordinates
  * @param {Date} [updateData.date] - Date of the shift
  * @returns {Promise<Object>} Updated shift with populated user and location data
  * @throws {AppError} If shift not found, user not authorized, or validation fails
@@ -245,15 +247,10 @@ const updateShift = async (shiftId, updateData) => {
     }
   }
 
+  let locationDoc;
   if (updateData.location) {
-    const locationExists = await LocationModel.findById(updateData.location);
-    if (!locationExists) {
-      throw new AppError({
-        message: "Location not found",
-        statusCode: 404,
-        errorCode: "LOCATION_NOT_FOUND",
-      });
-    }
+    locationDoc = await findOrCreateLocation(updateData.location);
+    updateData.location = locationDoc._id;
   }
 
   if (updateData.startTime || updateData.finishTime || updateData.date) {
@@ -290,7 +287,7 @@ const updateShift = async (shiftId, updateData) => {
     .populate("user", "name email")
     .populate(
       "location",
-      "name postCode distance constituency adminDistrict cordinates",
+      "name postCode distance constituency adminDistrict cordinates address",
     )
     .exec();
 
@@ -337,7 +334,11 @@ const deleteShift = async (shiftId) => {
  * @param {string} shiftsData[].startTime - Start time of the shift
  * @param {string} shiftsData[].finishTime - Finish time of the shift
  * @param {number} [shiftsData[].numOfShiftsPerDay] - Number of shifts per day
- * @param {string} shiftsData[].location - Location ID
+ * @param {Object} shiftsData[].location - Location object
+ * @param {string} shiftsData[].location.name - Location name
+ * @param {string} shiftsData[].location.address - Location address
+ * @param {string} shiftsData[].location.postcode - Location postcode
+ * @param {Object} shiftsData[].location.cordinates - Location coordinates
  * @param {Date} shiftsData[].date - Date of the shift
  * @returns {Promise<Object>} Results with created and updated shifts
  * @throws {AppError} If validation fails

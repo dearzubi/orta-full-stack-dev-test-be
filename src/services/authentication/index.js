@@ -95,7 +95,7 @@ const loginUser = async (email, password) => {
 /**
  * Get user by ID
  * @param {string} id
- * @returns {Promise<{user: {id: string, name: string, email: string}}>} User info
+ * @returns {Promise<{user: {id: string, name: string, email: string, role: string}}>} User info
  */
 const getUser = async (id) => {
   const user = await UserModel.findOne({ _id: id });

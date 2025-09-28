@@ -1,5 +1,6 @@
 import { AppError } from "../utils/errors/app.error.js";
 import * as process from "node:process";
+import * as console from "node:console";
 
 /** @typedef {import('express').Request} Request */
 /** @typedef {import('express').Response} Response */

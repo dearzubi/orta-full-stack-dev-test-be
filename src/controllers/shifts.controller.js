@@ -54,6 +54,37 @@ const timeValidator = z
     },
   );
 
+const locationObjectSchema = z.object(
+  {
+    name: z
+      .string({ error: "Location name is required" })
+      .nonempty({ error: "Location name cannot be empty" })
+      .trim(),
+    address: z
+      .string({ error: "Location address is required" })
+      .nonempty({ error: "Location address cannot be empty" })
+      .trim(),
+    postCode: z
+      .string({ error: "Location post code is required" })
+      .nonempty({ error: "Location post code cannot be empty" })
+      .trim(),
+    cordinates: z.object(
+      {
+        longitude: z
+          .number({ error: "Longitude must be a number" })
+          .min(-180, { error: "Longitude must be between -180 and 180" })
+          .max(180, { error: "Longitude must be between -180 and 180" }),
+        latitude: z
+          .number({ error: "Latitude must be a number" })
+          .min(-90, { error: "Latitude must be between -90 and 90" })
+          .max(90, { error: "Latitude must be between -90 and 90" }),
+      },
+      { error: "Location coordinates are required" },
+    ),
+  },
+  { error: "Invalid location object" },
+);
+
 const schemaCreateShift = z.object({
   title: z
     .string({ error: "Title is required" })
@@ -86,7 +117,7 @@ const schemaCreateShift = z.object({
     .positive({ error: "Number of shifts per day must be a positive integer" })
     .optional()
     .default(1),
-  location: objectIdValidator("Invalid location ID"),
+  location: locationObjectSchema,
   date: dateValidator,
 });
 
@@ -123,7 +154,7 @@ const schemaBatchShift = z.object({
     .positive({ error: "Number of shifts per day must be a positive integer" })
     .optional()
     .default(1),
-  location: objectIdValidator("Invalid location ID"),
+  location: locationObjectSchema,
   date: dateValidator,
 });
 
@@ -167,7 +198,7 @@ const schemaUpdateShift = z.object({
     .int()
     .positive({ error: "Number of shifts per day must be a positive integer" })
     .optional(),
-  location: objectIdValidator("Invalid location ID").optional(),
+  location: locationObjectSchema.optional(),
   date: dateValidator.optional(),
 });
 
@@ -245,7 +276,7 @@ const paginationQuerySchema = z
       .optional()
       .transform((val) => {
         if (val === undefined || val === null || val === "") {
-          return "desc";
+          return "asc";
         }
         return val;
       })
