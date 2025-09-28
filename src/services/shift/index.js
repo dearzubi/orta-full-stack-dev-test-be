@@ -156,7 +156,7 @@ const createShift = async (shiftData) => {
     });
   }
 
-  const locationDoc = await findOrCreateLocation(location);
+  const locationDoc = await createOrUpdateLocation(location);
 
   const { startDateTime, finishDateTime } = createShiftDateTimes(
     date,
