@@ -9,7 +9,7 @@ const getLocations = async () => {
 };
 
 /**
- * Find or create a location based on name
+ * Create or update an existing location
  * @param {Object} locationData - Location data object
  * @param {string} locationData.name - Location name
  * @param {string} locationData.address - Location address
@@ -19,15 +19,20 @@ const getLocations = async () => {
  * @param {number} locationData.cordinates.latitude - Latitude
  * @returns {Promise<Object>} Location document
  */
-const findOrCreateLocation = async (locationData) => {
+const createOrUpdateLocation = async (locationData) => {
   let location = await LocationModel.findOne({ name: locationData.name });
 
   if (!location) {
     location = new LocationModel(locationData);
     await location.save();
+  } else {
+    await LocationModel.findByIdAndUpdate(location._id, locationData, {
+      new: true,
+      runValidators: true,
+    });
   }
 
-  return location;
+  return location._id;
 };
 
-export { getLocations, findOrCreateLocation };
+export { getLocations, createOrUpdateLocation };

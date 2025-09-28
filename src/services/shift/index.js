@@ -10,7 +10,7 @@ import {
   getCurrentDateTime,
   formatTimeString,
 } from "../../utils/datetime.js";
-import { findOrCreateLocation } from "../location/index.js";
+import { createOrUpdateLocation } from "../location/index.js";
 
 /**
  * Format a single shift object for API response
@@ -248,10 +248,8 @@ const updateShift = async (shiftId, updateData) => {
     }
   }
 
-  let locationDoc;
   if (updateData.location) {
-    locationDoc = await findOrCreateLocation(updateData.location);
-    updateData.location = locationDoc._id;
+    updateData.location = await createOrUpdateLocation(updateData.location);
   }
 
   if (updateData.startTime || updateData.finishTime || updateData.date) {
