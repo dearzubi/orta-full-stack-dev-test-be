@@ -11,6 +11,7 @@ import {
   clockOutController,
   getAllShiftsController,
   getUserShiftsController,
+  getShiftController,
 } from "../controllers/shifts.controller.js";
 
 const router = express.Router();
@@ -47,6 +48,7 @@ router.put(
   requireAdminMiddleware,
   updateShiftController,
 );
+router.get("/:id", requireAuthMiddleware, getShiftController);
 router.delete(
   "/:id",
   requireAuthMiddleware,

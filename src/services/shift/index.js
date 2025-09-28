@@ -37,6 +37,7 @@ const formatShiftForResponse = (shift) => ({
     id: shift.user._id,
     name: shift.user.name,
     email: shift.user.email,
+    role: shift.user.role,
   },
   location: {
     id: shift.location._id,
@@ -82,7 +83,7 @@ const getShiftsWithPagination = async (baseQuery = {}, options = {}) => {
 
   const [shifts, totalCount] = await Promise.all([
     ShiftModel.find(query)
-      .populate("user", "name email")
+      .populate("user", "name email role")
       .populate(
         "location",
         "name postCode distance constituency adminDistrict cordinates address",
@@ -178,7 +179,7 @@ const createShift = async (shiftData) => {
   const savedShift = await newShift.save();
 
   const shift = await ShiftModel.findById(savedShift._id)
-    .populate("user", "name email")
+    .populate("user", "name email role")
     .populate(
       "location",
       "name postCode distance constituency adminDistrict cordinates address",
@@ -284,7 +285,7 @@ const updateShift = async (shiftId, updateData) => {
   }
 
   const shift = await ShiftModel.findById(updatedShift._id)
-    .populate("user", "name email")
+    .populate("user", "name email role")
     .populate(
       "location",
       "name postCode distance constituency adminDistrict cordinates address",
@@ -473,7 +474,7 @@ const clockInShift = async (shiftId, userId) => {
     },
     { new: true },
   )
-    .populate("user", "name email")
+    .populate("user", "name email role")
     .populate("location");
 
   return {
@@ -542,7 +543,7 @@ const clockOutShift = async (shiftId, userId) => {
     },
     { new: true },
   )
-    .populate("user", "name email")
+    .populate("user", "name email role")
     .populate("location");
 
   return {
@@ -584,6 +585,33 @@ const getUserShifts = async (userId, options = {}) => {
   return getShiftsWithPagination({ user: userId }, options);
 };
 
+/**
+ * Get shift by ID
+ * @param {string} shiftId - ID of the shift
+ * @returns {Promise<Object>} Shift object
+ * @throws {AppError} If shift not found
+ */
+const getShift = async (shiftId) => {
+  const shift = await ShiftModel.findById(shiftId)
+    .populate("user", "name email role")
+    .populate(
+      "location",
+      "name postCode distance constituency adminDistrict cordinates address",
+    )
+    .exec();
+  if (!shift) {
+    throw new AppError({
+      message: "Shift not found",
+      statusCode: 404,
+      errorCode: "SHIFT_NOT_FOUND",
+    });
+  }
+
+  return {
+    shift: formatShiftForResponse(shift),
+  };
+};
+
 export {
   createShift,
   updateShift,
@@ -594,4 +622,5 @@ export {
   clockOutShift,
   getAllShifts,
   getUserShifts,
+  getShift,
 };

@@ -9,6 +9,7 @@ import {
   clockOutShift,
   getAllShifts,
   getUserShifts,
+  getShift,
 } from "../services/shift/index.js";
 import { z } from "zod";
 import mongoose from "mongoose";
@@ -439,6 +440,24 @@ const cancelShiftController = async (req, res, next) => {
 };
 
 /**
+ * Controller to handle get shift
+ * @param {Request} req
+ * @param {Response} res
+ * @param {NextFunction} next
+ */
+const getShiftController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    zodSchemaValidator(objectIdValidator("Invalid shift ID"), id);
+
+    res.status(200).json(await getShift(id));
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Controller to handle worker clock in
  * @param {Request} req
  * @param {Response} res
@@ -486,4 +505,5 @@ export {
   clockOutController,
   getAllShiftsController,
   getUserShiftsController,
+  getShiftController,
 };
