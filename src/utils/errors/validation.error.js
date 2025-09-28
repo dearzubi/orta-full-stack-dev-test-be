@@ -1,5 +1,6 @@
 import { AppError } from "./app.error.js";
-import { z } from "zod";
+
+/** @typedef {{path: string[], message: string}} ZodIssue */
 
 export class ValidationError extends AppError {
   /** @type {Array<{path: string, error: string}> | undefined} */
@@ -10,7 +11,7 @@ export class ValidationError extends AppError {
    *
    * @param {Object} params
    * @param {string} [params.message="Validation failed"] - Error message
-   * @param {z.core.$ZodIssue[]} [params.issues] - Array of zod validation issues
+   * @param {ZodIssue[]} [params.issues] - Array of zod validation issues
    * @param {string} [params.errorCode="VALIDATION_ERROR"] - Application-specific error code
    * @param {Error} [params.cause] - The original error that caused this error, if any
    */

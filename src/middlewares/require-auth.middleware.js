@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { AuthorizationError } from "../utils/errors/auth.error.js";
+import { AuthenticationError } from "../utils/errors/auth.error.js";
 import * as process from "node:process";
 
 /** @typedef {import('express').Request} Request */
@@ -16,7 +16,7 @@ const requireAuthMiddleware = async (req, res, next) => {
   try {
     const { authorization } = req.headers;
     if (!authorization) {
-      throw new AuthorizationError({
+      throw new AuthenticationError({
         message: "Authorization header missing",
         errorCode: "AUTH_HEADER_MISSING",
       });
@@ -24,14 +24,14 @@ const requireAuthMiddleware = async (req, res, next) => {
     const token = authorization.split(" ");
 
     if (token.length !== 2) {
-      throw new AuthorizationError(
+      throw new AuthenticationError(
         "Invalid authorization header",
         "AUTH_HEADER_INVALID",
       );
     }
 
     if (token[0] !== "Bearer") {
-      throw new AuthorizationError(
+      throw new AuthenticationError(
         `Invalid authorization header scheme. Expected 'Bearer' but got: ${token[0]}`,
         "AUTH_HEADER_INVALID_SCHEME",
       );
@@ -43,7 +43,7 @@ const requireAuthMiddleware = async (req, res, next) => {
     next();
   } catch (error) {
     if (error.message === "jwt malformed") {
-      next(new AuthorizationError("Malformed token", "AUTH_TOKEN_MALFORMED"));
+      next(new AuthenticationError("Malformed token", "AUTH_TOKEN_MALFORMED"));
     } else {
       next(error);
     }

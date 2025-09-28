@@ -286,7 +286,7 @@ describe("Shift API", () => {
         location: locationId,
       };
 
-      await request(app).post("/api/shifts").send(shiftData).expect(403);
+      await request(app).post("/api/shifts").send(shiftData).expect(401);
     });
 
     it("should return error with invalid token", async () => {
@@ -300,7 +300,7 @@ describe("Shift API", () => {
         .post("/api/shifts")
         .set("Authorization", "Bearer invalid-token")
         .send(shiftData)
-        .expect(403);
+        .expect(401);
     });
 
     it("should return error when worker tries to create shift", async () => {
@@ -542,7 +542,7 @@ describe("Shift API", () => {
       await request(app)
         .put(`/api/shifts/${shiftId}`)
         .send(updateData)
-        .expect(403);
+        .expect(401);
     });
 
     it("should return error with invalid token", async () => {
@@ -552,7 +552,7 @@ describe("Shift API", () => {
         .put(`/api/shifts/${shiftId}`)
         .set("Authorization", "Bearer invalid-token")
         .send(updateData)
-        .expect(403);
+        .expect(401);
     });
 
     it("should update shift with new location", async () => {
@@ -667,14 +667,14 @@ describe("Shift API", () => {
     });
 
     it("should return error without authentication token", async () => {
-      await request(app).delete(`/api/shifts/${shiftId}`).expect(403);
+      await request(app).delete(`/api/shifts/${shiftId}`).expect(401);
     });
 
     it("should return error with invalid token", async () => {
       await request(app)
         .delete(`/api/shifts/${shiftId}`)
         .set("Authorization", "Bearer invalid-token")
-        .expect(403);
+        .expect(401);
     });
 
     it("should return error when worker tries to delete shift", async () => {
@@ -908,7 +908,7 @@ describe("Shift API", () => {
         ],
       };
 
-      await request(app).post("/api/shifts/batch").send(batchData).expect(403);
+      await request(app).post("/api/shifts/batch").send(batchData).expect(401);
     });
 
     it("should return error when worker tries to batch create/update shifts", async () => {
@@ -1008,7 +1008,7 @@ describe("Shift API", () => {
     });
 
     it("should return error without authentication", async () => {
-      await request(app).patch(`/api/shifts/${shiftId}/cancel`).expect(403);
+      await request(app).patch(`/api/shifts/${shiftId}/cancel`).expect(401);
     });
 
     it("should return error when worker tries to cancel shift", async () => {
@@ -1587,7 +1587,7 @@ describe("Shift API", () => {
     });
 
     it("should return error without authentication", async () => {
-      await request(app).get("/api/shifts").expect(403);
+      await request(app).get("/api/shifts").expect(401);
     });
 
     it("should return error when non-admin tries to access all shifts", async () => {
@@ -1752,7 +1752,7 @@ describe("Shift API", () => {
     });
 
     it("should return error without authentication", async () => {
-      await request(app).get("/api/shifts/my-shifts").expect(403);
+      await request(app).get("/api/shifts/my-shifts").expect(401);
     });
 
     it("should return empty results when user has no shifts", async () => {

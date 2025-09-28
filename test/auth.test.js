@@ -193,7 +193,7 @@ describe("Authentication API", () => {
 
     it("should return error without token", async () => {
       const res = await request(app).get("/api/user/getuser");
-      expect(res.status).to.equal(403);
+      expect(res.status).to.equal(401);
       expect(res.body).to.have.property("message");
     });
 
@@ -201,19 +201,19 @@ describe("Authentication API", () => {
       const res1 = await request(app)
         .get("/api/user/getuser")
         .set("Authorization", ``);
-      expect(res1.status).to.equal(403);
+      expect(res1.status).to.equal(401);
 
       const res2 = await request(app)
         .get("/api/user/getuser")
         .set("Authorization", `Bearer invalidtoken`);
-      expect(res2.status).to.equal(403);
+      expect(res2.status).to.equal(401);
     });
 
     it("should return error with incorrect auth scheme", async () => {
       const res = await request(app)
         .get("/api/user/getuser")
         .set("Authorization", `SCHEME 123`);
-      expect(res.status).to.equal(403);
+      expect(res.status).to.equal(401);
     });
   });
 
@@ -401,7 +401,7 @@ describe("Authentication API", () => {
         .send({
           userId: workerId,
         })
-        .expect(403);
+        .expect(401);
 
       expect(res.body).to.have.property("message");
     });
@@ -413,7 +413,7 @@ describe("Authentication API", () => {
         .send({
           userId: workerId,
         })
-        .expect(403);
+        .expect(401);
 
       expect(res.body).to.have.property("message");
     });

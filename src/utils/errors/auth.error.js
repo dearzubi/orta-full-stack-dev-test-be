@@ -11,3 +11,18 @@ export class AuthorizationError extends AppError {
     this.name = "AuthorizationError";
   }
 }
+
+export class AuthenticationError extends AppError {
+  constructor({
+    message = "Authentication failed",
+    errorCode = "AUTH_FAILED",
+  }) {
+    super({
+      message,
+      statusCode: 401,
+      errorCode,
+      isOperational: true,
+    });
+    this.name = "AuthenticationError";
+  }
+}
