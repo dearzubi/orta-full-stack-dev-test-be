@@ -79,7 +79,7 @@ Before you begin, ensure you have the following installed on your system:
   - [MongoDB Atlas](https://www.mongodb.com/atlas) (cloud database - recommended)
   - [MongoDB Community Server](https://www.mongodb.com/try/download/community) (local installation)
 
-_**Important Note: This project is incompatible with the existing MongoDB database URI provided in the assessment requirement pdf file as this backend improves certain fields in the database models and implements new features that were missing before.**_
+_**Important Note: This project is incompatible with the existing MongoDB database URI provided in the assessment requirement pdf file as this backend improves certain fields in the database models and implements new features that were missing before. The existing seed files are also outdated and incompatible and they need to be updated to reflect these changes.**_
 
 #### Check your installations:
 
