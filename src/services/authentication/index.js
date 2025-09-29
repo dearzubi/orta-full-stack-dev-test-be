@@ -150,7 +150,7 @@ const forgotPassword = async (email) => {
   user.passwordResetTokenExpiry = resetTokenExpiresAt;
   await user.save();
 
-  const resetUrl = `${process.env.FRONTEND_URL}/reset?uid=${user._id}&token=${resetToken}`;
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?uid=${user._id}&token=${resetToken}`;
 
   await sendEmail(
     email,
