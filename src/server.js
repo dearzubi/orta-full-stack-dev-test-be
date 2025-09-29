@@ -1,6 +1,7 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger/swaggerConfig.js";
 import authRouter from "./routes/authentication.router.js";
@@ -10,7 +11,6 @@ import locationRouter from "./routes/location.router.js";
 import { errorHandlerMiddleware } from "./middlewares/error-handler.middleware.js";
 import connectDB from "./db.js";
 import mongoose from "mongoose";
-dotenv.config();
 
 if (process.env.NODE_ENV !== "test") {
   await connectDB();
