@@ -1541,7 +1541,7 @@ describe("Shift API", () => {
 
     it("should return error for invalid limit", async () => {
       const res = await request(app)
-        .get("/api/shifts?limit=101")
+        .get("/api/shifts?limit=5000")
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(400);
 
@@ -1549,7 +1549,7 @@ describe("Shift API", () => {
       expect(res.body.issues).to.be.an("array");
       expect(res.body.issues).to.deep.include({
         path: "limit",
-        error: "Limit must be between 1 and 100",
+        error: "Limit must be between 1 and 1000",
       });
     });
 
