@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import * as process from "node:process";
 import dotenv from "dotenv";
-import Location from "../models/locationModel.js";
+import Location from "../models/location.model.js";
 
 dotenv.config();
 

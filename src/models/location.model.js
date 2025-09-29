@@ -13,9 +13,10 @@ const LocationSchema = new mongoose.Schema(
     distance: { type: Number, default: 0 },
     constituency: { type: String },
     adminDistrict: { type: String },
+    address: { type: String },
     cordinates: { type: CoordinateSchema, required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Location", LocationSchema);
