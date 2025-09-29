@@ -230,8 +230,8 @@ const paginationQuerySchema = z
           typeof val === "string" ? parseInt(val, 10) : Number(val);
         return isNaN(parsed) ? 10 : parsed;
       })
-      .refine((val) => val >= 1 && val <= 100, {
-        error: "Limit must be between 1 and 100",
+      .refine((val) => val >= 1 && val <= 1000, {
+        error: "Limit must be between 1 and 1000",
       }),
     status: z
       .any()
