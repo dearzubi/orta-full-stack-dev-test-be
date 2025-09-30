@@ -137,11 +137,11 @@ NODE_ENV=development
 # Authentication
 JWT_SECRET=your-super-secure-jwt-secret-here-min-32-chars
 
-# Email (for password reset - optional for development)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
+# Email Setup - Required for Forgot Password functionality Only
+SUPPORT_EMAIL=from-emai@gmail.com
+GMAIL_USERNAME=your-email@gmail.com
+GMAIL_PASSWORD=your-app-password
+FRONTEND_URL=your-frontend-url-here
 ```
 
 > **Security Note**: Replace `JWT_SECRET` with a strong, random string (at least 32 characters)
