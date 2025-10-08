@@ -106,7 +106,7 @@ describe("Shift API", () => {
       startTime: "09:00",
       finishTime: "17:00",
       numOfShiftsPerDay: 1,
-      date: "2025-10-01",
+      date: dayjs().add(1, "day").format("YYYY-MM-DD"),
     };
 
     it("should create a new shift with valid data", async () => {
